@@ -142,6 +142,11 @@
   }
   .files li:not(.empty) { cursor: grab; position: relative; }
   .files li.dragging { opacity: .4; }
+  .file-name[contenteditable] {
+    cursor: text;
+    outline: none;
+    border-bottom: 1px solid var(--navy);
+  }
   /* drop marker: a navy bar where the dragged name will land */
   .files li.drop-before::before,
   .files li.drop-after::after {
@@ -264,14 +269,33 @@
       }
       row.files.forEach((name, j) => {
         const li = document.createElement('li');
-        li.textContent = name;
+        const label = document.createElement('span');
+        label.className = 'file-name';
+        label.textContent = name;
+        li.appendChild(label);
         const x = document.createElement('button');
         x.textContent = '×';
         x.title = 'Remove';
         x.onclick = () => { row.files.splice(j, 1); save(); render(); };
         li.appendChild(x);
         li.draggable = true;
-        li.title = 'Drag to reorder';
+        li.title = 'Drag to reorder, double-click to rename';
+        // Double-click the name to edit it in place: Enter or clicking away saves, Esc cancels.
+        label.ondblclick = () => {
+          li.draggable = false;
+          label.contentEditable = 'plaintext-only';
+          label.focus();
+          getSelection().selectAllChildren(label);
+        };
+        label.onkeydown = (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); label.blur(); }
+          if (e.key === 'Escape') { label.textContent = name; label.blur(); }
+        };
+        label.onblur = () => {
+          const v = label.textContent.trim();
+          if (v && v !== name) { row.files[j] = v; save(); }
+          render();
+        };
         li.ondragstart = (e) => {
           drag = { r: i, j };
           e.dataTransfer.effectAllowed = 'move';

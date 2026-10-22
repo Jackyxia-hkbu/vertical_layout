@@ -21,6 +21,8 @@ jsDelivr for the PNG export, so that feature needs an internet connection.
   there are no real files.
 - **Drag to reorder:** drag a file name to change its position. A navy bar
   shows where it will land. Drop it on another row to move it there.
+- **Rename a file name:** double-click it to edit. Enter or clicking away
+  saves; Esc cancels. An empty name keeps the old one.
 - **Add / delete rows:** "+ Add row" at the bottom adds a row. "Delete row"
   removes one, asking first if it still has file names.
 - **Save as PNG:** the button next to the title downloads all rows as an
