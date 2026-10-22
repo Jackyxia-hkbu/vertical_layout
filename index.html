@@ -140,6 +140,21 @@
     border-left: 3px solid var(--navy);
     font-size: .95rem;
   }
+  .files li:not(.empty) { cursor: grab; position: relative; }
+  .files li.dragging { opacity: .4; }
+  /* drop marker: a navy bar where the dragged name will land */
+  .files li.drop-before::before,
+  .files li.drop-after::after {
+    content: '';
+    position: absolute;
+    top: -2px; bottom: -2px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--navy);
+  }
+  .files li.drop-before::before { left: -6px; }
+  .files li.drop-after::after { right: -6px; }
+  .row.drop-into { outline: 2px dashed var(--navy); outline-offset: -4px; }
   .files li.empty { border: none; }
   .files li button {
     border: none;
@@ -202,6 +217,23 @@
     try { localStorage.setItem(KEY, JSON.stringify(rows)); } catch {}
   }
 
+  // Dragging a file name: where it came from, and where it would land.
+  let drag = null;   // { r: row index, j: file index }
+
+  function clearMarks() {
+    document.querySelectorAll('.drop-before, .drop-after, .drop-into')
+      .forEach(el => el.classList.remove('drop-before', 'drop-after', 'drop-into'));
+  }
+  // Insertion index in a row's list for a pointer at (x, y); handles names wrapped onto several lines.
+  function dropIndex(ul, x, y) {
+    const items = [...ul.querySelectorAll('li:not(.empty)')];
+    for (let k = 0; k < items.length; k++) {
+      const r = items[k].getBoundingClientRect();
+      if (y < r.top || (y <= r.bottom && x < r.left + r.width / 2)) return k;
+    }
+    return items.length;
+  }
+
   function render() {
     rowsEl.innerHTML = '';
     rows.forEach((row, i) => {
@@ -238,6 +270,15 @@
         x.title = 'Remove';
         x.onclick = () => { row.files.splice(j, 1); save(); render(); };
         li.appendChild(x);
+        li.draggable = true;
+        li.title = 'Drag to reorder';
+        li.ondragstart = (e) => {
+          drag = { r: i, j };
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', name);
+          li.classList.add('dragging');
+        };
+        li.ondragend = () => { drag = null; li.classList.remove('dragging'); clearMarks(); };
         ul.appendChild(li);
       });
 
@@ -259,6 +300,27 @@
         again.hidden = false;
         again.querySelector('input').focus();
       };
+      // The whole row accepts a dropped file name, so it can also move between rows.
+      sec.ondragover = (e) => {
+        if (!drag) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        clearMarks();
+        sec.classList.add('drop-into');
+        const items = ul.querySelectorAll('li:not(.empty)');
+        const k = dropIndex(ul, e.clientX, e.clientY);
+        if (k < items.length) items[k].classList.add('drop-before');
+        else if (items.length) items[items.length - 1].classList.add('drop-after');
+      };
+      sec.ondrop = (e) => {
+        if (!drag) return;
+        e.preventDefault();
+        let k = dropIndex(ul, e.clientX, e.clientY);
+        const [name] = rows[drag.r].files.splice(drag.j, 1);
+        if (drag.r === i && k > drag.j) k--;   // removing it shifted later names left
+        row.files.splice(k, 0, name);
+        drag = null; save(); render();
+      };
       sec.querySelector('[data-act="del"]').onclick = () => {
         if (row.files.length && !confirm(`Delete "${row.name || 'Row ' + (i + 1)}" and its files?`)) return;
         rows.splice(i, 1); save(); render();
@@ -266,6 +328,9 @@
       rowsEl.appendChild(sec);
     });
   }
+
+  // Pointer outside every row: no drop target, so hide the marker.
+  document.addEventListener('dragover', (e) => { if (drag && !e.target.closest?.('.row')) clearMarks(); });
 
   document.getElementById('add-row').onclick = () => {
     rows.push({ name: '', files: [] }); save(); render();
