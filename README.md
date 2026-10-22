@@ -34,11 +34,21 @@ jsDelivr for the PNG export, so that feature needs an internet connection.
 
 ## Usage
 
-Open the page in a browser:
+The page is published with GitHub Pages at
+<https://jackyxia-hkbu.github.io/vertical_layout/>.
+
+To run it locally instead, open the file in a browser:
 
 ```sh
 xdg-open index.html
 ```
+
+### Publishing to GitHub Pages
+
+The page is served straight from the repository, with no build step. In the
+repository's **Settings → Pages**, set **Source** to "Deploy from a branch",
+pick `main` and `/ (root)`, and save. GitHub serves `index.html` at the URL
+above, and every push to `main` updates the site within a minute or two.
 
 ## Data storage
 
@@ -54,8 +64,9 @@ as plain text. Rows live under `vertical-layout-rows` as JSON:
 
 Things to know:
 
-- The data is per browser and per file location. A different browser,
-  computer, or moving `index.html` starts empty.
+- The data is per browser and per address. A different browser or
+  computer starts empty, and the GitHub Pages site and a local copy of
+  `index.html` keep separate data.
 - Clearing browser site data erases it. There is no export or backup yet.
 
 ## Customizing
