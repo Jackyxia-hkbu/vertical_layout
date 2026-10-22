@@ -142,10 +142,15 @@
   }
   .files li:not(.empty) { cursor: grab; position: relative; }
   .files li.dragging { opacity: .4; }
-  .file-name[contenteditable] {
-    cursor: text;
-    outline: none;
+  .file-name { cursor: text; }
+  .file-edit {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: none;
     border-bottom: 1px solid var(--navy);
+    outline: none;
+    padding: 0;
   }
   /* drop marker: a navy bar where the dragged name will land */
   .files li.drop-before::before,
@@ -279,22 +284,30 @@
         x.onclick = () => { row.files.splice(j, 1); save(); render(); };
         li.appendChild(x);
         li.draggable = true;
-        li.title = 'Drag to reorder, double-click to rename';
-        // Double-click the name to edit it in place: Enter or clicking away saves, Esc cancels.
-        label.ondblclick = () => {
+        li.title = 'Click to rename, drag to reorder';
+        // Click the name to edit it in a text box: Enter or clicking away saves, Esc cancels.
+        // (A drag never fires a click, so the two don't get in each other's way.)
+        label.onclick = () => {
           li.draggable = false;
-          label.contentEditable = 'plaintext-only';
-          label.focus();
-          getSelection().selectAllChildren(label);
-        };
-        label.onkeydown = (e) => {
-          if (e.key === 'Enter') { e.preventDefault(); label.blur(); }
-          if (e.key === 'Escape') { label.textContent = name; label.blur(); }
-        };
-        label.onblur = () => {
-          const v = label.textContent.trim();
-          if (v && v !== name) { row.files[j] = v; save(); }
-          render();
+          const box = document.createElement('input');
+          box.className = 'file-edit';
+          box.value = name;
+          const fit = () => { box.style.width = Math.max(box.value.length, 4) + 2 + 'ch'; };
+          fit();
+          box.oninput = fit;
+          let cancelled = false;
+          box.onkeydown = (e) => {
+            if (e.key === 'Enter') box.blur();
+            if (e.key === 'Escape') { cancelled = true; box.blur(); }
+          };
+          box.onblur = () => {
+            const v = box.value.trim();
+            if (!cancelled && v && v !== name) { row.files[j] = v; save(); }
+            render();
+          };
+          label.replaceWith(box);
+          box.focus();
+          box.select();
         };
         li.ondragstart = (e) => {
           drag = { r: i, j };
