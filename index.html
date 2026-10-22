@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vertical Layout</title>
+<style>
+  /* Journal style: white page, navy ink, thin rules, a light blue tint on alternate rows */
+  :root {
+    --bg: #ffffff;
+    --ink: #12386b;
+    --navy: #0b3d78;
+    --rule: #c9d8ec;
+    --row1: #ffffff;  --row1-ink: #12386b;
+    --row2: #eef4fc;  --row2-ink: #12386b;
+    color-scheme: light;   /* always white & blue, even if the system is in dark mode */
+  }
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, sans-serif;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  #sheet {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+  #rows {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .row {
+    flex: 1;                     /* rows share the screen height... */
+    min-height: 140px;           /* ...but never get too short; page scrolls instead */
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    padding: 1rem 1.25rem;
+    box-sizing: border-box;
+  }
+  .row {
+    border-bottom: 1px solid var(--rule);
+    padding-left: max(1.25rem, calc((100% - 960px) / 2));   /* centered text column, like a journal page */
+    padding-right: max(1.25rem, calc((100% - 960px) / 2));
+  }
+  .row:nth-child(odd)  { background: var(--row1); color: var(--row1-ink); }
+  .row:nth-child(even) { background: var(--row2); color: var(--row2-ink); }
+  /* masthead: page title above the rows */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-top: 4px solid var(--navy);
+    border-bottom: 2px solid var(--navy);
+    padding: 1.5rem max(1.25rem, calc((100% - 960px) / 2)) 1rem;
+    background: var(--bg);
+  }
+  #page-title {
+    display: block;
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: .01em;
+    color: var(--navy);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: .1rem .4rem;
+    margin-left: -.4rem;
+  }
+  #page-title:hover { border-color: var(--rule); }
+  #page-title:focus { outline: none; border-color: var(--navy); }
+  #page-title::placeholder { color: var(--navy); opacity: .5; }
+
+  .row-head {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .row-title {
+    font: inherit;
+    font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--navy) !important;
+    margin-right: auto;
+    color: inherit;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: .15rem .4rem;
+    margin-left: -.4rem;
+    min-width: 0;
+    width: 20rem;
+  }
+  .row-title:hover { border-color: color-mix(in srgb, currentColor 35%, transparent); }
+  .row-title:focus { outline: none; border-color: currentColor; background: color-mix(in srgb, currentColor 8%, transparent); }
+  .row-title::placeholder { color: inherit; opacity: .6; }
+  button {
+    font: inherit;
+    font-size: .9rem;
+    color: var(--navy);
+    background: transparent;
+    border: 1px solid var(--navy);
+    border-radius: 3px;
+    padding: .35rem .75rem;
+    cursor: pointer;
+    opacity: .85;
+  }
+  button:hover { opacity: 1; background: color-mix(in srgb, currentColor 12%, transparent); }
+
+  .files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .files li {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .3rem .4rem .3rem .7rem;
+    border-radius: 3px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--navy);
+    font-size: .95rem;
+  }
+  .files li.empty { border: none; }
+  .files li button {
+    border: none;
+    padding: 0 .35rem;
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .empty { opacity: .6; font-size: .9rem; }
+
+  .add-form { display: flex; gap: .5rem; }
+  .add-form[hidden] { display: none; }
+  .add-form input {
+    font: inherit;
+    font-size: .95rem;
+    padding: .35rem .6rem;
+    border-radius: 6px;
+    border: 1px solid currentColor;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    color: inherit;
+    min-width: 0;
+    width: 16rem;
+  }
+  .add-form input::placeholder { color: inherit; opacity: .6; }
+
+  #add-row {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    padding: .9rem;
+    background: var(--bg);
+    color: var(--ink);
+    color: var(--navy);
+    border-top: none;
+    border-bottom: 4px solid var(--navy);
+  }
+</style>
+</head>
+<body>
+  <div id="sheet">
+    <header>
+      <input id="page-title" placeholder="Vertical Layout" title="Click to rename">
+      <button id="save-png" title="Download the page as an image">Save as PNG</button>
+    </header>
+    <div id="rows"></div>
+  </div>
+  <button id="add-row">+ Add row</button>
+
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script>
+  const KEY = 'vertical-layout-rows';
+  const rowsEl = document.getElementById('rows');
+
+  // Each row: { files: [names] }. Saved in this browser so it survives reloads.
+  let rows = load() || [{ files: [] }, { files: [] }, { files: [] }];
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(rows)); } catch {}
+  }
+
+  function render() {
+    rowsEl.innerHTML = '';
+    rows.forEach((row, i) => {
+      const sec = document.createElement('section');
+      sec.className = 'row';
+      sec.innerHTML = `
+        <div class="row-head">
+          <input class="row-title" placeholder="Row ${i + 1}" title="Click to rename">
+
+          <button data-act="add">+ Add file</button>
+          <button data-act="del" title="Delete row">Delete row</button>
+        </div>
+        <form class="add-form" hidden>
+          <input placeholder="File name, then Enter" required>
+          <button type="submit">Add</button>
+          <button type="button" data-act="cancel">Cancel</button>
+        </form>
+        <ul class="files"></ul>`;
+
+      const title = sec.querySelector('.row-title');
+      title.value = row.name || '';
+      title.oninput = () => { row.name = title.value; save(); };
+      title.onkeydown = (e) => { if (e.key === 'Enter') title.blur(); };
+
+      const ul = sec.querySelector('.files');
+      if (row.files.length === 0) {
+        ul.innerHTML = '<li class="empty" style="background:none;padding:0">No files yet</li>';
+      }
+      row.files.forEach((name, j) => {
+        const li = document.createElement('li');
+        li.textContent = name;
+        const x = document.createElement('button');
+        x.textContent = '×';
+        x.title = 'Remove';
+        x.onclick = () => { row.files.splice(j, 1); save(); render(); };
+        li.appendChild(x);
+        ul.appendChild(li);
+      });
+
+      const form = sec.querySelector('.add-form');
+      const input = form.querySelector('input');
+      sec.querySelector('[data-act="add"]').onclick = () => {
+        form.hidden = false;
+        input.focus();
+      };
+      form.querySelector('[data-act="cancel"]').onclick = () => { form.hidden = true; };
+      input.onkeydown = (e) => { if (e.key === 'Escape') form.hidden = true; };
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const name = input.value.trim();
+        if (!name) return;
+        row.files.push(name); save(); render();
+        // keep the box open on this row for quick multiple entries
+        const again = rowsEl.children[i].querySelector('.add-form');
+        again.hidden = false;
+        again.querySelector('input').focus();
+      };
+      sec.querySelector('[data-act="del"]').onclick = () => {
+        if (row.files.length && !confirm(`Delete "${row.name || 'Row ' + (i + 1)}" and its files?`)) return;
+        rows.splice(i, 1); save(); render();
+      };
+      rowsEl.appendChild(sec);
+    });
+  }
+
+  document.getElementById('add-row').onclick = () => {
+    rows.push({ name: '', files: [] }); save(); render();
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    rowsEl.lastElementChild.querySelector('.row-title').focus();   // name it right away
+  };
+
+  // Page title, saved separately from the rows; also shown in the browser tab.
+  const TITLE_KEY = 'vertical-layout-title';
+  const pageTitle = document.getElementById('page-title');
+  function showTitle() { document.title = pageTitle.value.trim() || 'Vertical Layout'; }
+  try { pageTitle.value = localStorage.getItem(TITLE_KEY) || ''; } catch {}
+  showTitle();
+  pageTitle.oninput = () => {
+    try { localStorage.setItem(TITLE_KEY, pageTitle.value); } catch {}
+    showTitle();
+  };
+  pageTitle.onkeydown = (e) => { if (e.key === 'Enter') pageTitle.blur(); };
+
+  // Export only the rows (row names + file names) as a PNG: no page title, buttons, text boxes or "No files yet".
+  document.getElementById('save-png').onclick = async () => {
+    if (!window.htmlToImage) { alert('Image library failed to load (needs internet once).'); return; }
+    try {
+      const url = await htmlToImage.toPng(rowsEl, {
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        height: rowsEl.scrollHeight,
+        filter: (n) => !(n.tagName === 'BUTTON' || n.classList?.contains('add-form') || n.classList?.contains('empty')),
+      });
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (pageTitle.value.trim() || 'vertical-layout').replace(/[\\/:*?"<>|]+/g, '_') + '.png';
+      a.click();
+    } catch (err) {
+      alert('Could not create the PNG: ' + err.message);
+    }
+  };
+
+  render();
+</script>
+</body>
+</html>
